@@ -7,7 +7,7 @@ def get_client():
         import streamlit as st
         key = st.secrets["OPENROUTER_API_KEY"]
     except Exception:
-        key = "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"
+        key = os.environ.get("OPENROUTER_API_KEY", "")
     return OpenAI(
         base_url="https://openrouter.ai/api/v1",
         api_key=key,
