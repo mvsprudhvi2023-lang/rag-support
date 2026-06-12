@@ -1,19 +1,24 @@
-from openai import OpenAI
 import os
 import re
 
+CHUNKS = []
+
 def get_client():
+    import streamlit as st
     try:
-        import streamlit as st
         key = st.secrets["OPENROUTER_API_KEY"]
     except Exception:
-        key = os.environ.get("OPENROUTER_API_KEY", "")
+        key = "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"
+    
+    from openai import OpenAI
     return OpenAI(
         base_url="https://openrouter.ai/api/v1",
         api_key=key,
+        default_headers={
+            "HTTP-Referer": "https://rag-support-lpqchpvusn7hg5ea9kjcrw.streamlit.app",
+            "X-Title": "Multilingual RAG Support",
+        }
     )
-
-CHUNKS = []
 
 def load_pdf(filepath):
     try:
@@ -105,7 +110,7 @@ CONTEXT FROM DOCUMENTS:
 
     client = get_client()
     response = client.chat.completions.create(
-        model="anthropic/claude-haiku-4-5",
+        model="mistralai/mistral-7b-instruct:free",
         max_tokens=1024,
         messages=messages,
     )
@@ -114,7 +119,6 @@ CONTEXT FROM DOCUMENTS:
 
 if __name__ == "__main__":
     print("=== RAG self-test ===\n")
-
     load_text(
         """Return Policy: Customers may return unused items within 30 days for a full refund.
         Items must be in original packaging. Digital products are non-refundable.
@@ -122,7 +126,6 @@ if __name__ == "__main__":
         Refunds are processed within 5-7 business days.""",
         source="return_policy.txt"
     )
-
     load_text(
         """Shipping FAQ: Standard shipping takes 5-7 business days.
         Express shipping (2-3 days) costs $9.99 extra.
@@ -130,15 +133,8 @@ if __name__ == "__main__":
         Tracking numbers are emailed within 24 hours of dispatch.""",
         source="shipping_faq.txt"
     )
-
     q = "How long does shipping take?"
     ans, srcs = answer(q, language="English")
     print(f"Q: {q}")
     print(f"A: {ans}")
     print(f"Sources: {srcs}\n")
-
-    q2 = "¿Cuánto tarda el envío?"
-    ans2, srcs2 = answer(q2, language="Spanish")
-    print(f"Q: {q2}")
-    print(f"A: {ans2}")
-    print(f"Sources: {srcs2}")
